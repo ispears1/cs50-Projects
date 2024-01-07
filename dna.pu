@@ -1,0 +1,93 @@
+import csv
+import sys
+
+//A Program that identifies a person based on an input DNA sequence and a list of known DNA sequences
+
+def main():
+    # Ensures correct usage of the program. Assumes that the first input will be a csv file and the second will be a txt file
+    if len(sys.argv) != 3:
+        print("Correct usage: python dna.py data.csv sequence.txt")
+
+    # Reads a csv file containing names and number of STRs into the DNA_database dictionary
+    DNA_database = []
+
+    with open(sys.argv[1]) as file:
+        reader = csv.DictReader(file)
+        for person in reader:
+            DNA_database.append(person)
+
+    # Reads in a DNA sequence from a txt file
+    with open(sys.argv[2]) as file:
+        sequence = file.read()
+
+    # TODO: Find longest match of each STR in DNA sequence
+    STRs = []
+    with open(sys.argv[1]) as file:
+        STRs = file.readline().rstrip().split(",")
+        STRs.remove("name")
+
+    # Populate the profile dictionary with empty values
+    profile = dict.fromkeys(STRs, 0)
+
+    #Populates the profile dictionary with the longest match of each STR in the DNA sequence
+    check_length = len(STRs)
+    for i in range(check_length):
+        profile[STRs[i]] = longest_match(sequence, STRs[i])
+
+    #Iterates over ever person in the database to check if they have a matching DNA sequence
+    name_check = len(DNA_database)
+    for i in range(name_check):
+        if find_match(STRs, profile, DNA_database[i]):
+            print(DNA_database[i]["name"])
+            return
+
+    print("No match")
+    return
+
+
+def longest_match(sequence, subsequence):
+    """Returns length of longest run of subsequence in sequence."""
+
+    # Initialize variables
+    longest_run = 0
+    subsequence_length = len(subsequence)
+    sequence_length = len(sequence)
+
+    # Check each character in sequence for most consecutive runs of subsequence
+    for i in range(sequence_length):
+        # Initialize count of consecutive runs
+        count = 0
+
+        # Check for a subsequence match in a "substring" (a subset of characters) within sequence
+        # If a match, move substring to next potential match in sequence
+        # Continue moving substring and checking for matches until out of consecutive matches
+        while True:
+            # Adjust substring start and end
+            start = i + count * subsequence_length
+            end = start + subsequence_length
+
+            # If there is a match in the substring
+            if sequence[start:end] == subsequence:
+                count += 1
+
+            # If there is no match in the substring
+            else:
+                break
+
+        # Update most consecutive matches found
+        longest_run = max(longest_run, count)
+
+    # After checking for runs at each character in seqeuence, return longest run found
+    return longest_run
+
+#Defines a function that will compare the STRs found in a given sequence to the genetic profile of an individual
+def find_match(keys, genetic_profile, individual):
+    check_length = len(genetic_profile)
+    for i in range(check_length):
+        key = keys[i]
+        if int(genetic_profile[key]) != int(individual[key]):
+            return False
+    return True
+
+
+main()
